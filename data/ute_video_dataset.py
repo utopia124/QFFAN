@@ -40,7 +40,8 @@ class UTEVideoDataset(Dataset):
         # 每镜头包含帧数
         self.frames_per_shot = 5
         # 抽样出来的视频帧的临时保存路径
-        self.tmp_save_path = os.path.abspath("../tmp")
+        self.tmp_save_path = os.path.abspath("tmp")
+        # print(self.tmp_save_path)
         # 四个视频的路径
         video_p01 = os.path.join(data_root, "P01.mp4")
         video_p02 = os.path.join(data_root, "P02.mp4")
@@ -67,6 +68,7 @@ class UTEVideoDataset(Dataset):
         """
         # 进行视频帧采样
         if not os.path.exists(self.tmp_save_path):
+            print("不存在{}".format(self.tmp_save_path))
             os.mkdir(self.tmp_save_path)
             for path in self.video_paths:
                 frame_sample(path, self.tmp_save_path)
@@ -123,8 +125,7 @@ class UTEVideoDataset(Dataset):
                     data.append(((frames, concept_pair), summary))
         return data
 
-
-data_path = "D://Workspace//Data//UTE_video"
-ute_dataset = UTEVideoDataset(data_path)
-
-print(len(ute_dataset[10][0][0]))
+# data_path = "D://Workspace//Data//UTE_video"
+# ute_dataset = UTEVideoDataset(data_path)
+#
+# print(len(ute_dataset[10][0][0]))
