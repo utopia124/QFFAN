@@ -92,7 +92,7 @@ class UTEVideoDataset(Dataset):
         concepts_path = os.path.join(self.data_root, "Data", "Dense_per_shot_tags", "Dictionary.txt")
         raw = pd.read_csv(concepts_path)
         concepts_raw = np.array(raw).flatten()
-        concepts = [concept.replace("'", "") for concept in concepts_raw]
+        concepts = {concept.replace("'", ""): v for v, concept in enumerate(concepts_raw)}
         return concepts
 
     def form_data(self):
