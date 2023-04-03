@@ -14,3 +14,5 @@ class TrainingConfig:
 class DatasetConfig:
     def __init__(self):
         self.split = 0.2
+        self.shot_num_split = 10
+        self.frames_per_shot = 5
