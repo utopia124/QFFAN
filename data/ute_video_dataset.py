@@ -199,7 +199,7 @@ class GoogleNetFeatureExtractor:
         ])
 
     def extract(self, image_list, feature_path=None):
-
+        #hellpo
         if feature_path is not None and os.path.exists(feature_path):
             features = torch.load(feature_path)
         else:
