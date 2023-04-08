@@ -1,5 +1,7 @@
 import os.path
 
+import numpy
+
 from model.model import QueryFocusedFullyAttentionNetwork
 from data.ute_video_dataset import UTEVideoDataset
 from config.config import TrainingConfig
@@ -23,12 +25,18 @@ test_loader = DataLoader(test_dataset, batch_size=8, shuffle=False, drop_last=Tr
 data_loader = DataLoader(dataset, batch_size=8, shuffle=False, drop_last=True)
 # 获取模型
 net = QueryFocusedFullyAttentionNetwork(dataset.concepts).to(training_config.device)
-net.load_state_dict(torch.load("model_para/Epoch29.pkl"))
+# net.load_state_dict(torch.load("model_para/Epoch29.pkl"))
 # 定义学习率，损失函数和优化器
 learning_rate = 1e-7
 criterion = nn.BCELoss()
 l1_regularization = nn.L1Loss()
-optimiser = optim.Adam(net.parameters(), lr=learning_rate)
+optimiser = optim.Adam(net.parameters(), lr=0.0002)
+
+
+def sparsity_loss(pred, delta):
+    # n = len(pred)
+    out = torch.sum((pred - delta).abs()) / len(pred)
+    return out
 
 
 def train():
@@ -49,7 +57,7 @@ def train():
             y = torch.squeeze(y)
             # print("pred{}".format(pred.shape))
             # print("y{}".format(y.shape))
-            loss = criterion(pred, y) + l1_regularization(pred, y)
+            loss = criterion(pred, y) + sparsity_loss(pred, delta=0.033)
             optimiser.zero_grad()
             loss.backward()
             optimiser.step()
