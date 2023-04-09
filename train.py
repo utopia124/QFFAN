@@ -21,15 +21,19 @@ class SparseLoss(nn.Module):
         super().__init__()
 
     def forward(self, pred, y, lamda):
-        n = len(pred)
-        loss = 0
-        for i in range(n):
-            if y[i] == 0:
-
-                loss += -torch.log((1 - pred[i]))
-            else:
-                loss += -lamda * torch.log(pred[i])
-        loss = loss / n
+        batch_size = len(pred)
+        loss = torch.zeros(1).to('cuda')
+        for i in range(batch_size):
+            tmp_loss = torch.zeros(1).to('cuda')
+            n = len(pred[i])
+            for j, yj in enumerate(y[i]):
+                if yj == 0:
+                    tmp_loss += -torch.log(1 - pred[i][j] + 1e-10)
+                else:
+                    tmp_loss += -lamda * torch.log(pred[i][j] + 1e-10)
+            tmp_loss = tmp_loss / n
+            loss += tmp_loss
+        loss = loss / batch_size
         return loss
 
 
