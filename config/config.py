@@ -16,3 +16,4 @@ class DatasetConfig:
         self.split = 0.2
         self.shot_num_split = 10
         self.frames_per_shot = 5
+        self.google_net_out_channel = 1000

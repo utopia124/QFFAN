@@ -8,6 +8,30 @@ import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader
 from torch.utils.data import random_split
+import math
+
+
+def rule(epoch):
+    lamda = math.pow(0.5, int(epoch / 5))
+    return lamda
+
+
+class SparseLoss(nn.Module):
+    def __init__(self):
+        super().__init__()
+
+    def forward(self, pred, y, lamda):
+        n = len(pred)
+        loss = 0
+        for i in range(n):
+            if y[i] == 0:
+
+                loss += -torch.log((1 - pred[i]))
+            else:
+                loss += -lamda * torch.log(pred[i])
+        loss = loss / n
+        return loss
+
 
 training_config = TrainingConfig()
 
@@ -23,23 +47,25 @@ test_loader = DataLoader(test_dataset, batch_size=8, shuffle=False, drop_last=Tr
 data_loader = DataLoader(dataset, batch_size=8, shuffle=False, drop_last=True)
 # 获取模型
 net = QueryFocusedFullyAttentionNetwork(dataset.concepts).to(training_config.device)
-net.load_state_dict(torch.load("model_para/Epoch29.pkl"))
+# net.load_state_dict(torch.load("model_para/Epoch.pkl"))
 # 定义学习率，损失函数和优化器
-learning_rate = 1e-7
-criterion = nn.BCELoss()
+learning_rate = 1e-5
+criterion = SparseLoss()
 l1_regularization = nn.L1Loss()
+
 optimiser = optim.Adam(net.parameters(), lr=learning_rate)
+scheduler = torch.optim.lr_scheduler.LambdaLR(optimiser, lr_lambda=rule)
 
 
 def train():
     net.train()
-    best_loss = 10.0
+    best_loss = 20
     test_file = "out/EpochTest.txt"
     if not os.path.exists("out"):
         os.mkdir("out")
     if not os.path.exists("model_para"):
         os.mkdir("model_para")
-    for epoch in range(30):
+    for epoch in range(20):
         out_file = "out/Epoch{}.txt".format(epoch)
         print("Epoch {}".format(epoch))
         for step, data in enumerate(train_loader):
@@ -47,18 +73,19 @@ def train():
             pred = net.forward(x)
             y = y.to(training_config.device)
             y = torch.squeeze(y)
-            # print("pred{}".format(pred.shape))
-            # print("y{}".format(y.shape))
-            loss = criterion(pred, y) + l1_regularization(pred, y)
+            loss = criterion(pred, y, 8)
             optimiser.zero_grad()
             loss.backward()
             optimiser.step()
+
             out_str = "Epoch {} Step {} Loss {}".format(epoch, step, loss.item())
             with open(out_file, mode='a', encoding='utf-8') as out:
                 out.write(out_str + "\n")
             print(out_str)
             # print("Epoch {} Step {} Loss {}".format(epoch, step, loss.item()))
         # 在测试集合上的效果
+        scheduler.step()
+        print("lr of epoch", epoch, "=>", scheduler.get_lr())
         net.eval()
         test_loss = 0
         with torch.no_grad():

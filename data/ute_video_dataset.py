@@ -182,8 +182,8 @@ class UTEVideoDataset(Dataset):
                     summary_list = torch.split(summary, self.shot_num_split)
                     # 将数据装填
                     for i in range(sample_num):
-                        # if sum(summary_list[i]) > 0:
-                        data.append([(tensor_list[i], concept_pair), summary_list[i]])
+                        if sum(summary_list[i]) > 0:
+                            data.append([[tensor_list[i], concept_pair], summary_list[i]])
         return data
 
 
@@ -199,7 +199,6 @@ class GoogleNetFeatureExtractor:
         ])
 
     def extract(self, image_list, feature_path=None):
-        #hellpo
         if feature_path is not None and os.path.exists(feature_path):
             features = torch.load(feature_path)
         else:
